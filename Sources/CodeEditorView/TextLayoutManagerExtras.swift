@@ -270,6 +270,7 @@ extension NSTextLayoutManager {
   ///   - renderingAttributesValidator: The validator to set.
   /// - Returns: A KVO object that needs to be retained until this validator is no longer needed.
   ///
+  @MainActor
   func setSafeRenderingAttributesValidator(with codeViewDelegate: CodeViewDelegate,
                                            _ renderingAttributesValidator:
                                              @escaping (NSTextLayoutManager, NSTextLayoutFragment) -> Void)
@@ -298,7 +299,7 @@ extension NSTextLayoutManager {
       }
     }
 
-    func processFragements() {
+    @MainActor func processFragements() {
       let fragments = pendingFragments.fragments
       pendingFragments.fragments = []
       fragments.forEach {
@@ -309,7 +310,7 @@ extension NSTextLayoutManager {
     let currentTextDidChange = codeViewDelegate.textDidChange
     codeViewDelegate.textDidChange = { textView in
       currentTextDidChange?(textView)
-      processFragements()
+      MainActor.assumeIsolated { processFragements() }
     }
 
     return textContentManager.observe(\.hasEditingTransaction) {
@@ -317,7 +318,7 @@ extension NSTextLayoutManager {
 
       // Process fragments if an editing transaction just ended.
       guard !textContentManager.hasEditingTransaction else { return }
-      processFragements()
+      MainActor.assumeIsolated { processFragements() }
 
     }
   }

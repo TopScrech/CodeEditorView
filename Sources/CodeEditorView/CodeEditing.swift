@@ -51,6 +51,7 @@ public struct CodeEditingCommands: Commands {
   }
 }
 
+@MainActor
 private func send(_ action: Selector) {
 #if os(macOS)
   NSApplication.shared.sendAction(action, to: nil, from: nil)
@@ -108,7 +109,8 @@ public struct CodeEditingCommandsView: View {
 
 /// Protocol with all code editor actions for maximum flexibility in invoking them via the responder chain.
 ///
-@objc public protocol CodeEditorActions {
+@objc @MainActor
+public protocol CodeEditorActions {
 
   func duplicate(_ sender: Any?)
   func reindent(_ sender: Any?)

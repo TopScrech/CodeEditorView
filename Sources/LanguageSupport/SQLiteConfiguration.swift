@@ -57,19 +57,17 @@ extension LanguageConfiguration {
   
   // See `sqlite3CtypeMap` in:
   // https://sqlite.org/src/file?name=ext/misc/normalize.c&ci=trunk
-  private static let sqliteIdentifierHeadCharacters: CharacterClass = CharacterClass(
+  private static var sqliteIdentifierHeadCharacters: CharacterClass { CharacterClass(
     "a"..."z",
     "A"..."Z",
     .anyOf("_"),
     "\u{80}" ... "\u{10FFFF}"
-  )
-  
-  private static let sqliteIdentifierCharacters: CharacterClass = CharacterClass(
+  ) }
+  private static var sqliteIdentifierCharacters: CharacterClass { CharacterClass(
     sqliteIdentifierHeadCharacters,
     "0"..."9",
     .anyOf("\u{24}")
-  )
-  
+  ) }
   // https://sqlite.org/lang_keywords.html
   private static let sqliteReservedIdentifiers = [
     "abort",

@@ -1,14 +1,15 @@
 {
+  "originHash" : "4c341f75d38bce0d3a82275f8668e6e68add3b512f6c678cf4e4947880a91384",
   "pins" : [
     {
       "identity" : "rearrange",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ChimeHQ/Rearrange.git",
       "state" : {
-        "revision" : "5ff7f3363f7a08f77e0d761e38e6add31c2136e1",
-        "version" : "1.8.1"
+        "revision" : "4de8be41dba304192e87dc0a11e0aa39e72aa2e8",
+        "version" : "2.1.1"
       }
     }
   ],
-  "version" : 2
+  "version" : 3
 }

@@ -15,7 +15,7 @@ import SwiftUI
 ///     the `id` is updated on setting any property. This makes mutating properties fairly expensive, but it should also
 ///     not be a particularily frequent operation.
 ///
-public struct Theme: Identifiable {
+public struct Theme: Identifiable, Sendable {
   public private(set) var id = UUID()
 
   /// The colour scheme of the theme.
@@ -193,7 +193,7 @@ typealias Themes = [String: Theme]
 
 extension Theme {
 
-  public static var defaultDark: Theme
+  public static let defaultDark: Theme
     = Theme(colourScheme: .dark,
             fontName: "SFMono-Medium",
             fontSize: 13.0,
@@ -215,7 +215,7 @@ extension Theme {
             cursorColour: OSColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0),
             invisiblesColour: OSColor(red: 0.33, green: 0.37, blue: 0.42, alpha: 1.0))
 
-  public static var defaultLight: Theme
+  public static let defaultLight: Theme
     = Theme(colourScheme: .light,
             fontName: "SFMono-Medium",
             fontSize: 13.0,

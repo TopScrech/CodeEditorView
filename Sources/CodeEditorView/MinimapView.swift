@@ -210,13 +210,16 @@ class MinimapLayoutFragment: NSTextLayoutFragment {
 
   override init(textElement: NSTextElement, range rangeInElement: NSTextRange?) {
     super.init(textElement: textElement, range: rangeInElement)
-    observation = super.observe(\.textLineFragments, options: [.new]){ [weak self] _, _ in
+    // TextKit KVO is synchronous with UI layout; keep a weak reference and check the executor
+    nonisolated(unsafe) weak let fragment = self
+    observation = super.observe(\.textLineFragments, options: [.new]){ _, _ in
 
       // NB: We cannot use `change.newValue` as this seems to pull the value from the subclass property (which we
       //     want to update here). Instead, we need to directly access `super`. This is, however as per Swift 5.9
       //     not possible in a closure weakly capturing `self` (which we need to do here to avoid a retain cycle).
       //     Hence, we defer to an auxilliary method.
-      self?.updateTextLineFragments()
+      MainActor.preconditionIsolated()
+      fragment?.updateTextLineFragments()
     }
   }
   

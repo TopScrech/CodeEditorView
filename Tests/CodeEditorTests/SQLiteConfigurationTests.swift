@@ -12,6 +12,7 @@ import Testing
 @testable import LanguageSupport
 
 
+@MainActor
 struct SQLiteNumberTokenisingTests {
   
   let codeStorage: CodeStorage
@@ -41,7 +42,7 @@ struct SQLiteNumberTokenisingTests {
     #expect(tokens.first == expectedToken)
   }
   
-  private static var validNumbers: [String] = [
+  nonisolated private static let validNumbers: [String] = [
       "1",
       "12.023",
       ".023",
@@ -55,6 +56,7 @@ struct SQLiteNumberTokenisingTests {
   
 }
 
+@MainActor
 struct SQLiteIdentifierTokenisingTests {
   
   let codeStorage: CodeStorage
@@ -94,7 +96,7 @@ struct SQLiteIdentifierTokenisingTests {
     #expect(tokens.count > 1, "Multiple tokens should be found")
   }
   
-  private static var validIdentifiers: [String] = [
+  nonisolated private static let validIdentifiers: [String] = [
       "tbl",
       "_table",
       "a_table",
@@ -107,13 +109,14 @@ struct SQLiteIdentifierTokenisingTests {
       "`table`",
     ]
   
-  private static var invalidIdentifiers: [String] = [
+  nonisolated private static let invalidIdentifiers: [String] = [
       "1table",
       "table>",
       "tab:le",
     ]
 }
 
+@MainActor
 struct SQLiteStringTokenisingTests {
   
   let codeStorage: CodeStorage
@@ -142,7 +145,7 @@ struct SQLiteStringTokenisingTests {
     #expect(tokens.first == expectedToken)
   }
   
-  private static var validStrings: [String] = [
+  nonisolated private static let validStrings: [String] = [
       "''",
       "'string'",
       "'str''ing'",

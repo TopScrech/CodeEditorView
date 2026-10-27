@@ -26,6 +26,7 @@ typealias EditActions = NSTextStorageEditActions
 // MARK: `NSTextStorage` subclass
 
 // `NSTextStorage` is a class cluster; hence, we realise our subclass by decorating an embeded vanilla text storage.
+@MainActor
 class CodeStorage: NSTextStorage {
 
   fileprivate let textStorage: NSTextStorage = NSTextStorage()
@@ -41,33 +42,49 @@ class CodeStorage: NSTextStorage {
   }
 
   @available(*, unavailable)
-  required init?(coder: NSCoder) {
+  nonisolated required init?(coder: NSCoder) {
     fatalError("init(coder:) has not been implemented")
   }
 
   #if os(macOS)
   @available(*, unavailable)
-  required init?(pasteboardPropertyList propertyList: Any, ofType type: NSPasteboard.PasteboardType) {
+  nonisolated required init?(pasteboardPropertyList propertyList: Any, ofType type: NSPasteboard.PasteboardType) {
     fatalError("init(pasteboardPropertyList:ofType:) has not been implemented")
   }
   #endif
 
 
+  // TextKit calls these Objective-C overrides synchronously on the UI thread
+  // Scoped unsafe aliases bridge non-Sendable Cocoa arguments without transferring them
+  // Every access to editor state is checked by MainActor.assumeIsolated
   // MARK: Interface to override for subclass
 
-  override var string: String { textStorage.string }
+  nonisolated override var string: String {
+    nonisolated(unsafe) let storage = self
+    return MainActor.assumeIsolated { storage.textStorage.string }
+  }
 
   // We access attributes through the API of the wrapped `NSTextStorage`; hence, lazy attribute fixing keeps working as
   // before. (Lazy attribute fixing dramatically impacts performance due to syntax highlighting cutting the text up
   // into lots of short attribute ranges.)
-  override var fixesAttributesLazily: Bool { true }
+  nonisolated override var fixesAttributesLazily: Bool { true }
 
-  override func attributes(at location: Int, effectiveRange range: NSRangePointer?) -> [NSAttributedString.Key : Any] {
-    return textStorage.attributes(at: location, effectiveRange: range)
+  nonisolated override func attributes(at location: Int, effectiveRange range: NSRangePointer?) -> [NSAttributedString.Key : Any] {
+    nonisolated(unsafe) let range = range
+    nonisolated(unsafe) var attributes: [NSAttributedString.Key: Any] = [:]
+    nonisolated(unsafe) let storage = self
+    MainActor.assumeIsolated { attributes = storage.textStorage.attributes(at: location, effectiveRange: range) }
+    return attributes
   }
 
   // Extended to handle auto-deletion of adjacent matching brackets
-  override func replaceCharacters(in range: NSRange, with str: String) {
+  nonisolated override func replaceCharacters(in range: NSRange, with str: String) {
+    nonisolated(unsafe) let storage = self
+    MainActor.assumeIsolated { storage.replaceCodeCharacters(in: range, with: str) }
+  }
+
+  @MainActor
+  private func replaceCodeCharacters(in range: NSRange, with str: String) {
 
     beginEditing()
 
@@ -95,11 +112,15 @@ class CodeStorage: NSTextStorage {
     endEditing()
   }
 
-  override func setAttributes(_ attrs: [NSAttributedString.Key : Any]?, range: NSRange) {
-    beginEditing()
-    textStorage.setAttributes(attrs, range: range)
-    edited(.editedAttributes, range: range, changeInLength: 0)
-    endEditing()
+  nonisolated override func setAttributes(_ attrs: [NSAttributedString.Key : Any]?, range: NSRange) {
+    nonisolated(unsafe) let attrs = attrs
+    nonisolated(unsafe) let storage = self
+    MainActor.assumeIsolated {
+      storage.beginEditing()
+      storage.textStorage.setAttributes(attrs, range: range)
+      storage.edited(.editedAttributes, range: range, changeInLength: 0)
+      storage.endEditing()
+    }
   }
 }
 
@@ -110,6 +131,7 @@ extension NSAttributedString.Key {
   static let hideInvisibles: NSAttributedString.Key = .init("hideInvisibles")
 }
 
+@MainActor
 extension CodeStorage {
   
   /// Returns the theme colour for a line token.
@@ -182,6 +204,7 @@ extension CodeStorage {
 // MARK: -
 // MARK: Token attributes
 
+@MainActor
 extension CodeStorage {
 
   /// Yield the token at the given position (column index) on the given line, if any.
@@ -477,14 +500,16 @@ extension CodeStorage {
 // MARK: -
 // MARK: Text content storage
 
+@MainActor
 class CodeContentStorage: NSTextContentStorage {
 
-  override func processEditing(for textStorage: NSTextStorage,
+  nonisolated override func processEditing(for textStorage: NSTextStorage,
                                edited editMask: EditActions,
                                range newCharRange: NSRange,
                                changeInLength delta: Int,
                                invalidatedRange invalidatedCharRange: NSRange)
   {
+    MainActor.preconditionIsolated()
     // NB: It might seem that we can deal with the extended token invalidation range, given by
     //     `codeStorageDelegate.tokenInvalidationRange`, by extending `invalidatedCharRange` appropriately. While
     //      this triggers the appropriate redrawing on iOS, it is harmful for performance, as it invalidates the layout,
@@ -503,7 +528,10 @@ class CodeContentStorage: NSTextContentStorage {
 
     // NB: We need to wait until after the content storage has processed the edit before text locations (and ranges)
     //     match characters counts in the backing store again. Hence, the placement after the super call.
-    if let codeStorageDelegate   = textStorage.delegate as? CodeStorageDelegate,
+    nonisolated(unsafe) let textStorage = textStorage
+    nonisolated(unsafe) let storage = self
+    MainActor.assumeIsolated {
+      if let codeStorageDelegate   = textStorage.delegate as? CodeStorageDelegate,
        let invalidationRange     = codeStorageDelegate.tokenInvalidationRange,
        let invalidationLines     = codeStorageDelegate.tokenInvalidationLines
     {
@@ -512,13 +540,14 @@ class CodeContentStorage: NSTextContentStorage {
         } else { invalidationRange }
 
       if additionalInvalidationRange.length > 0 && invalidationLines > 1,
-        let additionalInvalidationTextRange = textRange(for: additionalInvalidationRange)
+        let additionalInvalidationTextRange = storage.textRange(for: additionalInvalidationRange)
       {
-        for textLayoutManager in textLayoutManagers {
+        for textLayoutManager in storage.textLayoutManagers {
           
           textLayoutManager.redisplayRenderingAttributes(for: additionalInvalidationTextRange)
         }
       }
+    }
     }
   }
 }

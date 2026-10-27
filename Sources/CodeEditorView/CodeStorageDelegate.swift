@@ -148,7 +148,8 @@ extension LineMap<LineInfo> {
 // MARK: -
 // MARK: Delegate class
 
-class CodeStorageDelegate: NSObject, NSTextStorageDelegate {
+@MainActor
+class CodeStorageDelegate: NSObject, @preconcurrency NSTextStorageDelegate {
 
   private(set) var language:  LanguageConfiguration
   private      var tokeniser: LanguageConfiguration.Tokeniser?  // cache the tokeniser
@@ -215,7 +216,7 @@ class CodeStorageDelegate: NSObject, NSTextStorageDelegate {
     super.init()
   }
 
-  deinit {
+  isolated deinit {
     Task { [languageService] in
       try? await languageService?.stop()
     }

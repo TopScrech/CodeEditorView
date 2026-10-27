@@ -108,7 +108,12 @@ final class CodeView: UITextView {
          oldValue.name != language.name || (oldValue.languageService != nil) != (language.languageService != nil)
       {
         Task { @MainActor in
-          try await codeStorageDelegate.change(language: language, for: codeStorage)
+          do {
+            try await codeStorageDelegate.change(language: language, for: codeStorage)
+          } catch {
+            logger.error("Failed to change language: \(error)")
+            return
+          }
           // FIXME: This is an awful kludge to get the code view to redraw with the new highlighting. Emitting
           //        `codeStorage.edited(:range:changeInLength)` doesn't seem to work reliably.
           Task { @MainActor in
@@ -290,9 +295,12 @@ final class CodeView: UITextView {
                                                object: self,
                                                queue: .main){ [weak self] _ in
 
-        self?.invalidateMessageViews(withIDs: self!.codeStorageDelegate.lastInvalidatedMessageIDs)
-        self?.gutterView?.invalidateGutter()
-        self?.minimapGutterView?.invalidateGutter()
+        MainActor.assumeIsolated {
+          guard let self else { return }
+          self.invalidateMessageViews(withIDs: self.codeStorageDelegate.lastInvalidatedMessageIDs)
+          self.gutterView?.invalidateGutter()
+          self.minimapGutterView?.invalidateGutter()
+        }
       }
   }
 
@@ -301,7 +309,7 @@ final class CodeView: UITextView {
     fatalError("init(coder:) has not been implemented")
   }
 
-  deinit {
+  isolated deinit {
     if let observer = textDidChangeObserver { NotificationCenter.default.removeObserver(observer) }
   }
 
@@ -688,7 +696,7 @@ final class CodeView: NSTextView {
         // NB: When resizing the window, where the text container doesn't completely fill the text view (i.e., the text
         //     is short), we need to explicitly redraw the gutter, as line wrapping may have changed, which affects
         //     line numbering.
-        self?.gutterView?.needsDisplay = true
+        MainActor.assumeIsolated { self?.gutterView?.needsDisplay = true }
       }
 
     // We need to check whether we need to look up completions or cancel a running completion process after every text
@@ -698,9 +706,12 @@ final class CodeView: NSTextView {
                                                object: self,
                                                queue: .main) { [weak self] _ in
 
-//        self?.infoPopover?.close()
-        self?.considerCompletionFor(range: self!.rangeForUserCompletion)
-        self?.invalidateMessageViews(withIDs: self!.codeStorageDelegate.lastInvalidatedMessageIDs)
+//        MainActor.assumeIsolated { self?.infoPopover?.close() }
+        MainActor.assumeIsolated {
+          guard let self else { return }
+          self.considerCompletionFor(range: self.rangeForUserCompletion)
+          self.invalidateMessageViews(withIDs: self.codeStorageDelegate.lastInvalidatedMessageIDs)
+        }
       }
 
     // Popups should disappear on cursor change.
@@ -709,7 +720,7 @@ final class CodeView: NSTextView {
                                                object: self,
                                                queue: .main) { [weak self] _ in
 
-        self?.infoPopover?.close()
+        MainActor.assumeIsolated { self?.infoPopover?.close() }
       }
 
     Task {
@@ -758,7 +769,7 @@ final class CodeView: NSTextView {
     fatalError("init(coder:) has not been implemented")
   }
 
-  deinit {
+  isolated deinit {
     if let observer = frameChangedNotificationObserver { NotificationCenter.default.removeObserver(observer) }
     if let observer = didChangeNotificationObserver { NotificationCenter.default.removeObserver(observer) }
     if let observer = didChangeSelectionNotificationObserver { NotificationCenter.default.removeObserver(observer) }
@@ -918,7 +929,7 @@ extension CodeView {
     minimapGutterView?.invalidateGutter(for: oldRange)
     minimapGutterView?.invalidateGutter(for: newRange)
 
-    DispatchQueue.main.async { [self] in
+    Task { @MainActor [self] in
       collapseMessageViews()
       updateMessageLineHighlights()
     }
@@ -1457,7 +1468,9 @@ final class CodeContainer: NSTextContainer {
                                                 remaining: remainingRect),
         calculatedRect = CGRect(x: 0, y: superRect.minY, width: size.width, height: superRect.height)
 
-    guard let codeView    = textView as? CodeView,
+    let codeView = textView as? CodeView
+    return MainActor.assumeIsolated {
+    guard let codeView,
           let codeStorage = codeView.optCodeStorage,
           let delegate    = codeStorage.delegate as? CodeStorageDelegate,
           let line        = delegate.lineMap.lineOf(index: characterIndex),
@@ -1485,13 +1498,14 @@ final class CodeContainer: NSTextContainer {
 
       // To fully determine the layout of the message view, typesetting needs to complete for this line; hence, we defer
       // configuring the view.
-      DispatchQueue.main.async { codeView.layoutMessageView(identifiedBy: messageBundleId) }
+      Task { @MainActor in codeView.layoutMessageView(identifiedBy: messageBundleId) }
 
       return CGRect(origin: calculatedRect.origin,
                     size: CGSize(width: calculatedRect.width - MessageView.minimumInlineWidth,
                                  height: calculatedRect.height))
 
     } else { return calculatedRect }
+    }
   }
 }
 
@@ -1551,6 +1565,7 @@ final class CodeContainer: NSTextContainer {
 
 /// Common code view actions triggered on a selection change.
 ///
+@MainActor
 func selectionDidChange<TV: TextView>(_ textView: TV) {
   guard let codeStorage  = textView.optCodeStorage,
         let visibleLines = textView.documentVisibleLines

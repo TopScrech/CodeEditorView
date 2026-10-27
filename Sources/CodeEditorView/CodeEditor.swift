@@ -137,6 +137,7 @@ public struct CodeEditor {
     self.setInfoParam        = nil
   }
 
+  @MainActor
   public class _Coordinator {
     @Binding fileprivate var text:     String
     @Binding fileprivate var position: Position
@@ -205,7 +206,7 @@ extension CodeEditor {
 
   /// Specification of the editor layout.
   ///
-  public struct LayoutConfiguration: Equatable, RawRepresentable {
+  public struct LayoutConfiguration: Sendable, Equatable, RawRepresentable {
 
     /// Show the minimap.
     ///
@@ -252,9 +253,9 @@ extension EnvironmentValues {
 
 extension CodeEditor {
 
-  public struct IndentationConfiguration: Equatable, RawRepresentable {
+  public struct IndentationConfiguration: Sendable, Equatable, RawRepresentable {
 
-    public enum Preference: Equatable {
+    public enum Preference: Sendable, Equatable {
       case preferSpaces
       case preferTabs
 
@@ -274,7 +275,7 @@ extension CodeEditor {
       }
     }
 
-    public enum TabKey: Equatable {
+    public enum TabKey: Sendable, Equatable {
       case identsInWhitespace
       case indentsAlways
       case insertsTab
@@ -395,7 +396,7 @@ extension CodeEditor {
   public struct SetActions {
     let setActions: (Actions) -> Void
 
-    public static let ignore: SetActions = .init({ _ in })
+    public static var ignore: SetActions { .init({ _ in }) }
 
     public init(_ setActions: @escaping (Actions) -> Void) {
       self.setActions = setActions
@@ -488,7 +489,7 @@ extension CodeEditor {
   public struct SetInfo {
     let setInfo: (Info) -> Void
 
-    public static let ignore: SetInfo = .init({ _ in })
+    public static var ignore: SetInfo { .init({ _ in }) }
 
     public init(_ setInfo: @escaping (Info) -> Void) {
       self.setInfo = setInfo
@@ -559,7 +560,7 @@ extension CodeEditor: UIViewRepresentable {
     codeView.verticalScrollPosition = position.verticalScrollPosition
 
     // Report the initial message set
-    DispatchQueue.main.async { codeView.update(messages: messages) }
+    Task { @MainActor in codeView.update(messages: messages) }
 
     // Set the initial actions
     //
@@ -739,8 +740,10 @@ extension CodeEditor: NSViewRepresentable {
                                                queue: .main){ [weak scrollView] _ in
 
           // FIXME: we would like to get less fine-grained updates here, but `NSScrollView.didEndLiveScrollNotification` doesn't happen when moving the cursor around
-          if let scrollView {
-            context.coordinator.scrollPositionDidChange(scrollView)
+          MainActor.assumeIsolated {
+            if let scrollView {
+              context.coordinator.scrollPositionDidChange(scrollView)
+            }
           }
         }
 
@@ -859,7 +862,7 @@ extension CodeEditor: NSViewRepresentable {
     var extraActionsCancellable:           Cancellable?
     var breakUndoCoalescingCancellable:    Cancellable?
 
-    deinit {
+    isolated deinit {
       if let observer = boundsChangedNotificationObserver { NotificationCenter.default.removeObserver(observer) }
     }
 
@@ -904,7 +907,7 @@ extension CodeEditor: NSViewRepresentable {
 /// Environment key for the current code editor theme.
 ///
 public struct CodeEditorTheme: EnvironmentKey {
-  public static var defaultValue: Theme = Theme.defaultLight
+  public static let defaultValue: Theme = Theme.defaultLight
 }
 
 extension EnvironmentValues {

@@ -17,6 +17,7 @@ import Combine
 
 /// Provider of document-specific location information for a language service.
 ///
+@MainActor
 public protocol LocationService: LocationConverter {
 
   /// Yields the length of the given line.
@@ -191,6 +192,7 @@ public enum LanguageServiceEvent {
 
 /// Determines the capabilities and endpoints for language-dependent external services, such as an LSP server.
 ///
+@MainActor
 public protocol LanguageService: AnyObject {
 
   // MARK: Document synchronisation

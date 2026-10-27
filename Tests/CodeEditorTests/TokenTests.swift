@@ -10,6 +10,7 @@ import XCTest
 @testable import CodeEditorView
 @testable import LanguageSupport
 
+@MainActor
 final class TokenTests: XCTestCase {
 
   override func setUpWithError() throws {
@@ -343,29 +344,15 @@ test */
     XCTAssertEqual(codeStorage.string, "🏁y🎉🚀x")
   }
 
-  static var allTests = [
-    ("testSimpleTokenise", testSimpleTokenise),
-    ("testTokeniseAllComment", testTokeniseAllComment),
-    ("testTokeniseWithNewline", testTokeniseWithNewline),
-    ("testTokeniseCommentAtEnd", testTokeniseCommentAtEnd),
-    ("testTokeniseCommentAtEndMulti", testTokeniseCommentAtEndMulti),
-    ("testTokeniseNestedComment", testTokeniseNestedComment),
-    ("testTokeniseMultiLineNestedComment", testTokeniseMultiLineNestedComment),
-    ("testCaseInsensitiveReservedIdentifiersUnspecified", testCaseInsensitiveReservedIdentifiersUnspecified),
-    ("testCaseInsensitiveReservedIdentifiersFalse", testCaseInsensitiveReservedIdentifiersFalse),
-    ("testCaseInsensitiveReservedIdentifiersTrue", testCaseInsensitiveReservedIdentifiersTrue),
-    ("testInsertNewlineAfterEmoji", testInsertNewlineAfterEmoji),
-    ("testInsertCharacterAfterMultipleEmojis", testInsertCharacterAfterMultipleEmojis),
-  ]
 }
 
 extension LanguageConfiguration {
-  private static let plainIdentifierRegex: Regex<Substring> = Regex {
+  private static var plainIdentifierRegex: Regex<Substring> { Regex {
     identifierHeadCharacters
     ZeroOrMore {
       identifierCharacters
     }
-  }
+  } }
   
   fileprivate static var structCaseSensitive: LanguageConfiguration {
     LanguageConfiguration(

@@ -170,27 +170,4 @@ final class LineMapTests: XCTestCase {
 //    testEditing(string: string, into: "\nabc\nx\ndefg\nhi\n", range: NSRange(location: 5, length: 20), changeInLength: 10)
 //  }
 
-  static var allTests = [
-    ("testInitEmpty", testInitEmpty),
-    ("testInitLineBreak", testInitLineBreak),
-    ("testInitSimple", testInitSimple),
-    ("testInitEmptyTrailing", testInitSimpleTrailing),
-    ("testInitLines", testInitLines),
-    ("testInitEmptyLines", testInitEmptyLines),
-
-    ("testLookupEmpty", testLookupEmpty),
-    ("testLookupLineBreak", testLookupLineBreak),
-    ("testLookupSimple", testLookupSimple),
-    ("testLookupEmptyTrailing", testLookupSimpleTrailing),
-    ("testLookupLines", testLookupLines),
-    ("testLookupEmptyLines", testLookupEmptyLines),
-
-    ("testEditingEmpty", testEditingEmpty),
-    ("testEditingLineBreak", testEditingLineBreak),
-    ("testEditingSimple", testEditingSimple),
-    ("testEditingSimpleTrailing", testEditingSimpleTrailing),
-    ("testEditingEmptyLines", testEditingEmptyLines),
-
-//    ("testEditingBogus", testEditingBogus),
-  ]
 }

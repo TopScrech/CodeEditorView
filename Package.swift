@@ -1,4 +1,4 @@
-// swift-tools-version:5.9
+// swift-tools-version:6.4
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -6,9 +6,9 @@ import PackageDescription
 let package = Package(
   name: "CodeEditorView",
   platforms: [
-    .macOS(.v14),
-    .iOS(.v17),
-    .visionOS(.v1)
+    .macOS("15.4"),
+    .iOS("18.4"),
+    .visionOS("2.4")
   ],
   products: [
     .library(
@@ -21,16 +21,13 @@ let package = Package(
   dependencies: [
     .package(
       url: "https://github.com/ChimeHQ/Rearrange.git",
-      .upToNextMajor(from: "1.6.0")),
+      .upToNextMajor(from: "2.1.1")),
   ],
   targets: [
     .target(
       name: "LanguageSupport",
       dependencies: [
         "Rearrange",
-      ],
-      swiftSettings: [
-        .enableUpcomingFeature("BareSlashRegexLiterals")
       ]),
     .target(
       name: "CodeEditorView",

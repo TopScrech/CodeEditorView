@@ -16,6 +16,7 @@ import LanguageSupport
 
 /// A protocol that bundles up the commonalities of 'UITextView' and 'NSTextView'.
 ///
+@MainActor
 protocol TextView {
   associatedtype Color
   associatedtype Font

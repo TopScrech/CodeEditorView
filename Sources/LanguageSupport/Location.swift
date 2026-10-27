@@ -59,6 +59,7 @@ public struct TextLocation {
 
 /// Protocol for a service converting between index positions of a string and text locations in line-column format.
 ///
+@MainActor
 public protocol LocationConverter {
   func textLocation(from location: Int) -> Result<TextLocation, Error>
   func location(from textLocation: TextLocation) -> Result<Int, Error>

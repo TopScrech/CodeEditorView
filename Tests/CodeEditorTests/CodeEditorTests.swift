@@ -9,7 +9,4 @@ final class CodeEditorTests: XCTestCase {
     XCTAssertEqual("Hello," + " World!", "Hello, World!")
   }
 
-  static var allTests = [
-    ("testExample", testExample),
-  ]
 }

@@ -219,7 +219,7 @@ final class CompletionPanel: NSPanel {
 
       // This is very dodgy, but I just don't know another way to make the initial first responder a SwiftUI view
       // somewhere inside the guts of this hosting view.
-      DispatchQueue.main.async { [self] in
+      Task { @MainActor [self] in
         window!.selectKeyView(following: self)
       }
       return true
@@ -330,11 +330,11 @@ final class CompletionPanel: NSPanel {
                                                                     object: self,
                                                                     queue: nil) { [weak self] _notification in
 
-      self?.close()
+      MainActor.assumeIsolated { self?.close() }
     }
   }
 
-  deinit {
+  isolated deinit {
     if let didResignObserver { NotificationCenter.default.removeObserver(didResignObserver) }
   }
 

@@ -335,7 +335,7 @@ extension LanguageConfiguration {
 
   /// Empty language configuration
   ///
-  public static let none = LanguageConfiguration(name: "Text",
+  public static var none: LanguageConfiguration { LanguageConfiguration(name: "Text",
                                                  supportsSquareBrackets: false,
                                                  supportsCurlyBrackets: false,
                                                  stringRegex: nil,
@@ -346,30 +346,29 @@ extension LanguageConfiguration {
                                                  identifierRegex: nil,
                                                  operatorRegex: nil,
                                                  reservedIdentifiers: [],
-                                                 reservedOperators: [])
+                                                 reservedOperators: []) }
 
 }
 
 extension LanguageConfiguration {
 
   // General purpose numeric literals
-  public static let binaryLit: Regex<Substring>   = /(?:[01]_*)+/
-  public static let octalLit: Regex<Substring>    = /(?:[0-7]_*)+/
-  public static let decimalLit: Regex<Substring>  = /(?:[0-9]_*)+/
-  public static let hexalLit: Regex<Substring>    = /(?:[0-9A-Fa-f]_*)+/
-  public static let optNegation: Regex<Substring> = /(?:\B-|\b)/
-  public static let exponentLit: Regex<Substring> = Regex {
+  public static var binaryLit: Regex<Substring> { /(?:[01]_*)+/ }
+  public static var octalLit: Regex<Substring> { /(?:[0-7]_*)+/ }
+  public static var decimalLit: Regex<Substring> { /(?:[0-9]_*)+/ }
+  public static var hexalLit: Regex<Substring> { /(?:[0-9A-Fa-f]_*)+/ }
+  public static var optNegation: Regex<Substring> { /(?:\B-|\b)/ }
+  public static var exponentLit: Regex<Substring> { Regex {
     /[eE](?:[+-])?/
     decimalLit
-  }
-  public static let hexponentLit: Regex<Substring> = Regex {
+  } }
+  public static var hexponentLit: Regex<Substring> { Regex {
     /[pP](?:[+-])?/
     decimalLit
-  }
+  } }
 
   // Identifier components following the Swift 5.10 reference
-  public static let identifierHeadCharacters: CharacterClass
-  = CharacterClass("a"..."z",
+  public static var identifierHeadCharacters: CharacterClass { CharacterClass("a"..."z",
                    "A"..."Z",
                    .anyOf("_"),
                    .anyOf("\u{A8}\u{AA}\u{AD}\u{AF}\u{B2}–\u{B5}\u{B7}–\u{BA}"),
@@ -385,15 +384,13 @@ extension LanguageConfiguration {
                    .anyOf("\u{10000}–\u{1FFFD}\u{20000}–\u{2FFFD}\u{30000}–\u{3FFFD}\u{40000}–\u{4FFFD}"),
                    .anyOf("\u{50000}–\u{5FFFD}\u{60000}–\u{6FFFD}\u{70000}–\u{7FFFD}\u{80000}–\u{8FFFD}"),
                    .anyOf("\u{90000}–\u{9FFFD}\u{A0000}–\u{AFFFD}\u{B0000}–\u{BFFFD}\u{C0000}–\u{CFFFD}"),
-                   .anyOf("\u{D0000}–\u{DFFFD}\u{E0000}–\u{EFFFD}"))
-  public static let identifierCharacters
-  = CharacterClass(identifierHeadCharacters,
+                   .anyOf("\u{D0000}–\u{DFFFD}\u{E0000}–\u{EFFFD}")) }
+  public static var identifierCharacters: CharacterClass { CharacterClass(identifierHeadCharacters,
                    "0"..."9",
-                   .anyOf("\u{300}–\u{36F}\u{1DC0}–\u{1DFF}\u{20D0}–\u{20FF}\u{FE20}–\u{FE2F}"))
+                   .anyOf("\u{300}–\u{36F}\u{1DC0}–\u{1DFF}\u{20D0}–\u{20FF}\u{FE20}–\u{FE2F}")) }
 
   // Operator components following the Swift 5.10 reference
-  public static let operatorHeadCharacters: CharacterClass
-  = CharacterClass(.anyOf("/=-+!*%<>&|^~?"),
+  public static var operatorHeadCharacters: CharacterClass { CharacterClass(.anyOf("/=-+!*%<>&|^~?"),
                    .anyOf("\u{A1}–\u{A7}"),
                    .anyOf("\u{A9}\u{AB}"),
                    .anyOf("\u{AC}\u{AE}"),
@@ -410,15 +407,14 @@ extension LanguageConfiguration {
                    .anyOf("\u{2E00}–\u{2E7F}"),
                    .anyOf("\u{3001}–\u{3003}"),
                    .anyOf("\u{3008}–\u{3020}"),
-                   .anyOf("\u{3030}"))
-  public static let operatorCharacters: CharacterClass
-  = CharacterClass(operatorHeadCharacters,
+                   .anyOf("\u{3030}")) }
+  public static var operatorCharacters: CharacterClass { CharacterClass(operatorHeadCharacters,
                    .anyOf("\u{0300}–\u{036F}"),
                    .anyOf("\u{1DC0}–\u{1DFF}"),
                    .anyOf("\u{20D0}–\u{20FF}"),
                    .anyOf("\u{FE00}–\u{FE0F}"),
                    .anyOf("\u{FE20}–\u{FE2F}"),
-                   .anyOf("\u{E0100}–\u{E01EF}"))
+                   .anyOf("\u{E0100}–\u{E01EF}")) }
 
 
     /// Wrap a regular expression into grouping brackets.

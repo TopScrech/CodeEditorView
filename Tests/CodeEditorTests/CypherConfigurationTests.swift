@@ -11,6 +11,7 @@ import Testing
 @testable import CodeEditorView
 @testable import LanguageSupport
 
+@MainActor
 struct CypherNumberTokenisingTests {
   
   let codeStorage: CodeStorage
@@ -41,7 +42,7 @@ struct CypherNumberTokenisingTests {
   }
   
   /// A few examples of numeric literals that should be valid in Cypher:
-  private static var validNumbers: [String] = [
+  nonisolated private static let validNumbers: [String] = [
     "42",
     "-42",
     "3.14159",
@@ -53,6 +54,7 @@ struct CypherNumberTokenisingTests {
   ]
 }
 
+@MainActor
 struct CypherIdentifierTokenisingTests {
   
   let codeStorage: CodeStorage
@@ -97,7 +99,7 @@ struct CypherIdentifierTokenisingTests {
   /// Valid Cypher identifiers:
   ///  - Unquoted: start with letter or underscore, followed by letters, digits, underscores
   ///  - Backtick-quoted: can contain more varied characters
-  private static var validIdentifiers: [String] = [
+  nonisolated private static let validIdentifiers: [String] = [
     "n",
     "_node",
     "abc123",
@@ -108,13 +110,14 @@ struct CypherIdentifierTokenisingTests {
   ]
   
   /// Some invalid identifier examples (leading digit, invalid symbol, etc.)
-  private static var invalidIdentifiers: [String] = [
+  nonisolated private static let invalidIdentifiers: [String] = [
     "1abc",        // leading digit
     "node!",       // exclamation mark outside backticks
     "my-node"      // hyphen not allowed in unquoted
   ]
 }
 
+@MainActor
 struct CypherStringTokenisingTests {
   
   let codeStorage: CodeStorage
@@ -145,7 +148,7 @@ struct CypherStringTokenisingTests {
   }
   
   /// Cypher strings can be single-quoted or double-quoted, with doubling of quotes to escape:
-  private static var validStrings: [String] = [
+  nonisolated private static let validStrings: [String] = [
     "''",                // empty string in single quotes
     "'Hello World'",
     "'It''s a string'",  // embedded single quote
